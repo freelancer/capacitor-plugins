@@ -205,6 +205,7 @@ To use splash screen images named something other than `splash.png`, set `androi
 <docgen-index>
 
 * [`show(...)`](#show)
+* [`updateProgress(...)`](#updateprogress)
 * [`hide(...)`](#hide)
 * [Interfaces](#interfaces)
 
@@ -226,6 +227,23 @@ Show the splash screen
 | **`options`** | <code><a href="#showoptions">ShowOptions</a></code> |
 
 **Since:** 1.0.0
+
+--------------------
+
+
+### updateProgress(...)
+
+```typescript
+updateProgress(options: UpdateProgressOptions) => Promise<void>
+```
+
+Update progress of splash screen
+
+| Param         | Type                                                                    |
+| ------------- | ----------------------------------------------------------------------- |
+| **`options`** | <code><a href="#updateprogressoptions">UpdateProgressOptions</a></code> |
+
+**Since:** 1.2.3
 
 --------------------
 
@@ -258,6 +276,13 @@ Hide the splash screen
 | **`fadeInDuration`**  | <code>number</code>  | How long (in ms) to fade in.                                        | <code>200</code>  | 1.0.0 |
 | **`fadeOutDuration`** | <code>number</code>  | How long (in ms) to fade out.                                       | <code>200</code>  | 1.0.0 |
 | **`showDuration`**    | <code>number</code>  | How long to show the splash screen when autoHide is enabled (in ms) | <code>3000</code> | 1.0.0 |
+
+
+#### UpdateProgressOptions
+
+| Prop           | Type                | Description                     | Since |
+| -------------- | ------------------- | ------------------------------- | ----- |
+| **`progress`** | <code>number</code> | Set percentage of progress bar. | 1.2.3 |
 
 
 #### HideOptions
