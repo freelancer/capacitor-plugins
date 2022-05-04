@@ -266,6 +266,14 @@ public class SplashScreen {
                 spinnerBar.setIndeterminateTintList(colorStateList);
             }
         }
+
+        if (progressBar == null) {
+            // Create a horizontal progress bar.
+            progressBar = new ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal);
+
+            // Ensure the progress filling is white.
+            progressBar.setProgressTintList(ColorStateList.valueOf(Color.WHITE));
+        }
     }
 
     private Drawable getSplashDrawable() {
@@ -380,10 +388,13 @@ public class SplashScreen {
                         windowManager.removeView(spinnerBar);
                     }
 
-                    params.height = WindowManager.LayoutParams.WRAP_CONTENT;
-                    params.width = WindowManager.LayoutParams.WRAP_CONTENT;
+                    // Copy common Window Layout Params.
+                    WindowManager.LayoutParams spinnerBarParams = params;
 
-                    windowManager.addView(spinnerBar, params);
+                    spinnerBarParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
+                    spinnerBarParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
+
+                    windowManager.addView(spinnerBar, spinnerBarParams);
 
                     if (config.isShowSpinner()) {
                         spinnerBar.setAlpha(0f);
@@ -398,46 +409,51 @@ public class SplashScreen {
                         spinnerBar.setVisibility(View.VISIBLE);
                     }
                 }
+
+                // If the progress bar is available.
+                if (progressBar != null) {
+                    // Make it invisible so it can be set as visible when required by updateProgress.
+                    progressBar.setVisibility(View.INVISIBLE);
+
+                    // Remove any existing progress bar in the case it is already attached to a parent.
+                    if (progressBar.getParent() != null) {
+                        windowManager.removeView(progressBar);
+                    }
+
+                    // Copy common Window Layout Params.
+                    WindowManager.LayoutParams progressBarParams = params;
+                    
+                    // Set the dimensions of the progress bar.
+                    progressBarParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
+                    progressBarParams.width = activity.getResources().getDisplayMetrics().widthPixels / 2;
+
+                    // Put the progress bar just a bit away from the center of the screen so there's room for a logo.
+                    progressBarParams.y = (int) ((activity.getResources().getDisplayMetrics().heightPixels / 2) * 0.25);
+
+                    // Add the progress bar.
+                    windowManager.addView(progressBar, progressBarParams);
+                }
             }
         );
     }
 
     // This function when called will automatically add a progress bar to the splash screen
     // if it is not available yet, and update the progress bar's progress.
-    public void updateProgress(final AppCompatActivity activity, final float percentage) {
-        Handler mainHandler = new Handler(context.getMainLooper());
+    public void updateProgress(final float percentage) {
+        // Show the progress bar if it is currently invisible.
+        if (progressBar.getVisibility() == View.INVISIBLE) {
+            Handler mainHandler = new Handler(context.getMainLooper());
 
-        // Updating UI from main thread would cause issues hence a Handler is used.
-        // This is similar to the approach used by functions `show` and `hide`.
-        mainHandler.post(
-            () -> {
-                // If the progress bar does not exist yet.
-                if (progressBar == null) {
-                    // Create a horizontal progress bar.
-                    progressBar = new ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal);
-
-                    // Ensure the progress filling is white.
-                    progressBar.setProgressTintList(ColorStateList.valueOf(Color.WHITE));
-
-                    WindowManager.LayoutParams params = new WindowManager.LayoutParams();
-
-                    // Required to enable the view to actually fade.
-                    params.format = PixelFormat.TRANSLUCENT;
-
-                    // Set the dimensions of the progress bar.
-                    params.height = WindowManager.LayoutParams.WRAP_CONTENT;
-                    params.width = activity.getWindow().getDecorView().getWidth() / 2;
-
-                    // Put the progress bar just a bit away from the center of the screen so there's room for a logo.
-                    params.y = (int) ((activity.getWindow().getDecorView().getHeight() / 2) * 0.25);
-
-                    // Add the progress bar.
-                    windowManager.addView(progressBar, params);
+            // Updating UI from main thread would cause issues hence a Handler is used.
+            // This is similar to the approach used by functions `show` and `hide`.
+            mainHandler.post(
+                () -> {
+                    progressBar.setVisibility(View.VISIBLE);
                 }
-                // Set the progress of the progress bar.
-                progressBar.setProgress((int) percentage);
-            }
-        );
+            );
+        }
+        // Set the progress of the progress bar.
+        progressBar.setProgress((int) percentage);
     }
 
     private void hide(final int fadeOutDuration, boolean isLaunchSplash) {

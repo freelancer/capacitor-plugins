@@ -43,7 +43,7 @@ public class SplashScreenPlugin extends Plugin {
     // Show and update progress of progress bar.
     @PluginMethod
     public void updateProgress(final PluginCall call) {
-        splashScreen.updateProgress(getActivity(), call.getFloat("progress", (float) 0));
+        splashScreen.updateProgress(call.getFloat("progress", (float) 0));
         call.resolve();
     }
 
