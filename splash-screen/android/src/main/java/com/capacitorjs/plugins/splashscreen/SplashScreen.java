@@ -279,7 +279,7 @@ public class SplashScreen {
     private Drawable getSplashDrawable() {
         int splashId;
         // Disables animations on older versions of Android as it may cause OOM issues.
-        if (config.getAnimated() == true && Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
+        if (config.getAnimated() == true && Build.VERSION.SDK_INT <= Build.VERSION_CODES.N_MR1) {
             // Uses the first image in the animation sequence in the aforementioned case.
             splashId = context.getResources().getIdentifier(config.getResourceName() + "_0", "drawable", context.getPackageName());
         } else {
