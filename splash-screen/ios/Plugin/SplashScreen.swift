@@ -24,6 +24,21 @@ import Capacitor
 
     public func showOnLaunch() {
         buildViews()
+        
+        // This has been moved here to prevent the LaunchScreen ==> WebView ==> SplashScreen flash.
+        if let backgroundColor = config.backgroundColor {
+            viewController.view.backgroundColor = backgroundColor
+        }
+        
+        parentView.addSubview(viewController.view)
+
+        // If the config says to animate.
+        if config.animated {
+            // Add the animated imageview across to the main view for viewing.
+            // Done with the subview to ensure the fade is done evenly.
+            viewController.view.addSubview(imageView)
+        }
+        
         if self.config.launchShowDuration == 0 {
             return
         }
@@ -73,10 +88,7 @@ import Capacitor
             guard let strongSelf = self else {
                 return
             }
-            if let backgroundColor = strongSelf.config.backgroundColor {
-                strongSelf.viewController.view.backgroundColor = backgroundColor
-            }
-
+            
             if strongSelf.config.showSpinner {
                 if let style = strongSelf.config.spinnerStyle {
                     strongSelf.spinner.style = style
@@ -85,15 +97,6 @@ import Capacitor
                 if let spinnerColor = strongSelf.config.spinnerColor {
                     strongSelf.spinner.color = spinnerColor
                 }
-            }
-
-            strongSelf.parentView.addSubview(strongSelf.viewController.view)
-
-            // If the config says to animate.
-            if strongSelf.config.animated {
-                // Add the animated imageview across to the main view for viewing.
-                // Done with the subview to ensure the fade is done evenly.
-                strongSelf.viewController.view.addSubview(strongSelf.imageView)
             }
 
             if strongSelf.config.showSpinner {
