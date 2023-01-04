@@ -65,8 +65,8 @@ import Capacitor
             
             // In the case the progress bar is not visible yet.
             if !strongSelf.progressBarVisible {
-                // Make the progress bar's progress white.
-                strongSelf.progressBar.tintColor = .white
+                // Make the progress bar's progress gray.
+                strongSelf.progressBar.tintColor = .gray
                 // Add it to the parent view so it can be shown.
                 strongSelf.parentView.addSubview(strongSelf.progressBar)
                 // Make the progress bar show in the middle of the screen (x) but 75% down (y) to allow for the logo to not be blocked.
