@@ -271,8 +271,8 @@ public class SplashScreen {
             // Create a horizontal progress bar.
             progressBar = new ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal);
 
-            // Ensure the progress filling is white.
-            progressBar.setProgressTintList(ColorStateList.valueOf(Color.WHITE));
+            // Ensure the progress filling is gray.
+            progressBar.setProgressTintList(ColorStateList.valueOf(Color.GRAY));
         }
     }
 
