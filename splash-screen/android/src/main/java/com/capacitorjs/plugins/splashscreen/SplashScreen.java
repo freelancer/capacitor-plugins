@@ -369,17 +369,19 @@ public class SplashScreen {
                     return;
                 }
 
-                splashImage.setAlpha(0f);
+                if (splashImage != null) {
+                    splashImage.setAlpha(0f);
 
-                splashImage
-                    .animate()
-                    .alpha(1f)
-                    .setInterpolator(new LinearInterpolator())
-                    .setDuration(settings.getFadeInDuration())
-                    .setListener(listener)
-                    .start();
+                    splashImage
+                            .animate()
+                            .alpha(1f)
+                            .setInterpolator(new LinearInterpolator())
+                            .setDuration(settings.getFadeInDuration())
+                            .setListener(listener)
+                            .start();
 
-                splashImage.setVisibility(View.VISIBLE);
+                    splashImage.setVisibility(View.VISIBLE);
+                }
 
                 if (spinnerBar != null) {
                     spinnerBar.setVisibility(View.INVISIBLE);
@@ -510,15 +512,18 @@ public class SplashScreen {
                     progressBar.animate().alpha(0).setInterpolator(new LinearInterpolator()).setDuration(fadeOutDuration).start();
                 }
 
-                splashImage.setAlpha(1f);
+                if (splashImage != null) {
+                    splashImage.setAlpha(1f);
 
-                splashImage
-                    .animate()
-                    .alpha(0)
-                    .setInterpolator(new LinearInterpolator())
-                    .setDuration(fadeOutDuration)
-                    .setListener(listener)
-                    .start();
+                    splashImage
+                            .animate()
+                            .alpha(0)
+                            .setInterpolator(new LinearInterpolator())
+                            .setDuration(fadeOutDuration)
+                            .setListener(listener)
+                            .start();
+                }
+
             }
         );
     }
@@ -566,6 +571,9 @@ public class SplashScreen {
             splashImage.setVisibility(View.INVISIBLE);
 
             windowManager.removeView(splashImage);
+            ImageView imageView = (ImageView) splashImage;
+            imageView.setImageDrawable(null);
+            splashImage = null;
         }
 
         // In the case that the progress bar doesn't exist.
