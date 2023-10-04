@@ -8,6 +8,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
@@ -41,6 +42,7 @@ public class SplashScreen {
     private Dialog dialog;
     private View splashImage;
     private ProgressBar spinnerBar;
+    private ProgressBar progressBar;
     private WindowManager windowManager;
     private boolean isVisible = false;
     private boolean isHiding = false;
@@ -92,8 +94,10 @@ public class SplashScreen {
      * @param activity
      * @param settings Settings used to show the Splash Screen
      */
-    private void showWithAndroid12API(final AppCompatActivity activity, final SplashScreenSettings settings) {
-        if (activity == null || activity.isFinishing()) return;
+    private void showWithAndroid12API(final AppCompatActivity activity, final SplashScreenSettings settings) throws Exception {
+        if (config.getAnimated()) {
+          throw new Exception("Android 12 API doesn't support animation");
+        }
 
         activity.runOnUiThread(
             () -> {
@@ -371,6 +375,14 @@ public class SplashScreen {
                 spinnerBar.setIndeterminateTintList(colorStateList);
             }
         }
+
+        if (progressBar == null) {
+            // Create a horizontal progress bar.
+            progressBar = new ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal);
+
+            // Ensure the progress filling is gray.
+            progressBar.setProgressTintList(ColorStateList.valueOf(Color.GRAY));
+        }
     }
 
     @SuppressWarnings("deprecation")
@@ -379,7 +391,17 @@ public class SplashScreen {
     }
 
     private Drawable getSplashDrawable() {
-        int splashId = context.getResources().getIdentifier(config.getResourceName(), "drawable", context.getPackageName());
+        int splashId;
+        // Disables animations on older versions of Android as it may cause OOM issues.
+        if (config.getAnimated() == true && Build.VERSION.SDK_INT <= Build.VERSION_CODES.N_MR1) {
+            // Uses the first image in the animation sequence in the aforementioned case.
+            splashId = context.getResources().getIdentifier(config.getResourceName() + "_0", "drawable", context.getPackageName());
+        } else {
+            // In all other cases, use the splash resource.
+            // In the case it is an animation, it would be an Animation List XML which would play in sequence.
+            // Otherwise, it should be just a standard image file.
+            splashId = context.getResources().getIdentifier(config.getResourceName(), "drawable", context.getPackageName());
+        }
         try {
             Drawable drawable = context.getResources().getDrawable(splashId, context.getTheme());
             return drawable;
@@ -490,17 +512,19 @@ public class SplashScreen {
                     }
                 }
 
-                splashImage.setAlpha(0f);
+                if (splashImage != null) {
+                    splashImage.setAlpha(0f);
 
-                splashImage
-                    .animate()
-                    .alpha(1f)
-                    .setInterpolator(new LinearInterpolator())
-                    .setDuration(settings.getFadeInDuration())
-                    .setListener(listener)
-                    .start();
+                    splashImage
+                            .animate()
+                            .alpha(1f)
+                            .setInterpolator(new LinearInterpolator())
+                            .setDuration(settings.getFadeInDuration())
+                            .setListener(listener)
+                            .start();
 
-                splashImage.setVisibility(View.VISIBLE);
+                    splashImage.setVisibility(View.VISIBLE);
+                }
 
                 if (spinnerBar != null) {
                     spinnerBar.setVisibility(View.INVISIBLE);
@@ -509,10 +533,13 @@ public class SplashScreen {
                         windowManager.removeView(spinnerBar);
                     }
 
-                    params.height = WindowManager.LayoutParams.WRAP_CONTENT;
-                    params.width = WindowManager.LayoutParams.WRAP_CONTENT;
+                    // Copy common Window Layout Params.
+                    WindowManager.LayoutParams spinnerBarParams = params;
 
-                    windowManager.addView(spinnerBar, params);
+                    spinnerBarParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
+                    spinnerBarParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
+
+                    windowManager.addView(spinnerBar, spinnerBarParams);
 
                     if (config.isShowSpinner()) {
                         spinnerBar.setAlpha(0f);
@@ -527,8 +554,51 @@ public class SplashScreen {
                         spinnerBar.setVisibility(View.VISIBLE);
                     }
                 }
+
+                // If the progress bar is available.
+                if (progressBar != null) {
+                    // Make it invisible so it can be set as visible when required by updateProgress.
+                    progressBar.setVisibility(View.INVISIBLE);
+
+                    // Remove any existing progress bar in the case it is already attached to a parent.
+                    if (progressBar.getParent() != null) {
+                        windowManager.removeView(progressBar);
+                    }
+
+                    // Copy common Window Layout Params.
+                    WindowManager.LayoutParams progressBarParams = params;
+
+                    // Set the dimensions of the progress bar.
+                    progressBarParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
+                    progressBarParams.width = activity.getResources().getDisplayMetrics().widthPixels / 2;
+
+                    // Put the progress bar just a bit away from the center of the screen so there's room for a logo.
+                    progressBarParams.y = (int) ((activity.getResources().getDisplayMetrics().heightPixels / 2) * 0.25);
+
+                    // Add the progress bar.
+                    windowManager.addView(progressBar, progressBarParams);
+                }
             }
         );
+    }
+
+    // This function when called will automatically add a progress bar to the splash screen
+    // if it is not available yet, and update the progress bar's progress.
+    public void updateProgress(final float percentage) {
+        // Show the progress bar if it is currently invisible.
+        if (progressBar.getVisibility() == View.INVISIBLE) {
+            Handler mainHandler = new Handler(context.getMainLooper());
+
+            // Updating UI from main thread would cause issues hence a Handler is used.
+            // This is similar to the approach used by functions `show` and `hide`.
+            mainHandler.post(
+                () -> {
+                    progressBar.setVisibility(View.VISIBLE);
+                }
+            );
+        }
+        // Set the progress of the progress bar.
+        progressBar.setProgress((int) percentage);
     }
 
     @SuppressWarnings("deprecation")
@@ -612,15 +682,27 @@ public class SplashScreen {
                     spinnerBar.animate().alpha(0).setInterpolator(new LinearInterpolator()).setDuration(fadeOutDuration).start();
                 }
 
-                splashImage.setAlpha(1f);
+                // In the case the progress bar has been added.
+                if (progressBar != null) {
+                    // Make the progress bar invisible.
+                    progressBar.setAlpha(1f);
 
-                splashImage
-                    .animate()
-                    .alpha(0)
-                    .setInterpolator(new LinearInterpolator())
-                    .setDuration(fadeOutDuration)
-                    .setListener(listener)
-                    .start();
+                    // Start the animation to make it invisible and blend into the layer below.
+                    progressBar.animate().alpha(0).setInterpolator(new LinearInterpolator()).setDuration(fadeOutDuration).start();
+                }
+
+                if (splashImage != null) {
+                    splashImage.setAlpha(1f);
+
+                    splashImage
+                            .animate()
+                            .alpha(0)
+                            .setInterpolator(new LinearInterpolator())
+                            .setDuration(fadeOutDuration)
+                            .setListener(listener)
+                            .start();
+                }
+
             }
         );
     }
@@ -679,6 +761,18 @@ public class SplashScreen {
             splashImage.setVisibility(View.INVISIBLE);
 
             windowManager.removeView(splashImage);
+            ImageView imageView = (ImageView) splashImage;
+            imageView.setImageDrawable(null);
+            splashImage = null;
+        }
+
+        // In the case that the progress bar doesn't exist.
+        if (progressBar != null && progressBar.getParent() != null) {
+            // Make it invisible.
+            progressBar.setVisibility(View.INVISIBLE);
+
+            // Remove the progress bar entirely.
+            windowManager.removeView(progressBar);
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && config.isFullScreen() || config.isImmersive()) {
