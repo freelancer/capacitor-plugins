@@ -178,7 +178,7 @@ In `capacitor.config.json`:
 In `capacitor.config.ts`:
 
 ```ts
-/// <reference types="@capacitor/splash-screen" />
+/// <reference types="@freelancercom/splash-screen" />
 
 import { CapacitorConfig } from '@capacitor/cli';
 
