@@ -32,6 +32,16 @@ public class SplashScreenPlugin: CAPPlugin, CAPBridgedPlugin {
 
     }
 
+    // Show and update progress of progress bar.
+    @objc public func updateProgress(_ call: CAPPluginCall) {
+        if let splash = splashScreen {
+            splash.updateProgress(percentage: call.getFloat("progress", 0))
+            call.resolve()
+        } else {
+            call.reject("Unable to hide Splash Screen")
+        }
+    }
+
     // Hide the splash screen
     @objc public func hide(_ call: CAPPluginCall) {
         if let splash = splashScreen {
@@ -82,6 +92,9 @@ public class SplashScreenPlugin: CAPPlugin, CAPBridgedPlugin {
 
         config.launchShowDuration = getConfig().getInt("launchShowDuration", config.launchShowDuration)
         config.launchAutoHide = getConfig().getBoolean("launchAutoHide", config.launchAutoHide)
+        config.animated = getConfig().getBoolean("animated", config.animated)
+        // Play the multiple image frames across the amount of milliseconds specified.
+        config.launchAnimationDuration = getConfig().getInt("launchAnimationDuration", config.launchAnimationDuration)
         return config
     }
 
