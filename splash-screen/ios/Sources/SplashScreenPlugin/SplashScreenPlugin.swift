@@ -7,7 +7,8 @@ public class SplashScreenPlugin: CAPPlugin, CAPBridgedPlugin {
     public let jsName = "SplashScreen"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "show", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "hide", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "hide", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "updateProgress", returnType: CAPPluginReturnPromise)
     ]
     private var splashScreen: SplashScreen?
 
